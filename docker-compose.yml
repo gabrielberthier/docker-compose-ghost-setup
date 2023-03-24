@@ -1,4 +1,4 @@
-version: '3'
+version: '3.7'
 
 services:
   nginx:
@@ -8,24 +8,45 @@ services:
     ports:
       - 443:443
     volumes:
-      - ./nginx/ssl/yourhost.xyz.key:/etc/nginx/yourhost.xyz.key:ro
-      - ./nginx/ssl/yourhost.xyz.crt:/etc/nginx/yourhost.xyz.crt:ro
-      - ./nginx/conf/ghost.conf:/etc/nginx/conf.d/ghost.conf:z
+      - ./nginx/configs/ghost.template:/etc/nginx/conf.d/ghost.template
+      - ./data/nginx:/etc/nginx/conf.d
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
     links:
       - ghost
+    depends_on:
+      - certbot
+      - mysql
     restart: always
+    environment:
+      - APP_DOMAIN=${APP_DOMAIN}
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+  
+  certbot:
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt/:rw
+      - ./data/certbot/www:/var/www/certbot/:rw
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
   ghost:
     image: ghost:latest
     container_name: ghost
     hostname: ghost
     volumes:
-      - $PWD/ghost/volumes/config.production.json:/var/lib/ghost/config.production.json:z #overwrite default settings 
-      - ./ghost/content:/var/lib/ghost/content:z
+      - ./ghost/volumes/config.production.json:/var/lib/ghost/config.production.json
+      - ./ghost/content:/var/lib/ghost/content
     expose:
-    - "3306"
-    environment: # this section can be commented to start in dev mode by default
-      - NODE_ENV=production # set either production or development, then it will load the respective config
+      - "3306"
+    environment:
+      NODE_ENV: ${ENVIRONMENT}
+      database__client: mysql
+      database__connection__host: db
+      database__connection__user: ${MYSQL_DATABASE_USER}
+      database__connection__password: ${MYSQL_PASSWORD}
+      database__connection__database: ${MYSQL_DATABASE_NAME}
+      url: https://${APP_DOMAIN}
     restart: always
     links:
       - mysql
@@ -34,13 +55,13 @@ services:
     image: mysql:latest
     container_name: mysql
     volumes:
-       - ./dbdata:/var/lib/mysql:z  # Persist storage
+      - ./dbdata:/var/lib/mysql:z # Persist storage
     expose:
       - "3306"
     environment:
       # Beware of special characters in password that can be interpreted by shell
-      - MYSQL_ROOT_PASSWORD= #specify your root pass
-      - MYSQL_DATABASE=ghostdata
-      - MYSQL_USER=ghostusr
-      - MYSQL_PASSWORD= xyx #please change this
+      - MYSQL_ROOT_PASSWORD=${ROOT_PSD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE_NAME}
+      - MYSQL_USER=${MYSQL_DATABASE_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD} #please change this
     restart: always
