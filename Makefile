@@ -1,7 +1,9 @@
 COMPOSE=docker-compose -f docker-compose.yml
-COMPOSE_DEV=docker-compose -f docker-compose.dev.yml
+COMPOSE_DEV=docker-compose -f ./dev/docker-compose.dev.yml
 
 run: ./setup.sh
+
+run-dev: docker compose -f ./dev/docker-compose.dev.yml
 
 stop: docker stop $$(docker ps -q) || true
 
