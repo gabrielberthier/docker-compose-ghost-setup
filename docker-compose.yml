@@ -6,22 +6,21 @@ services:
     container_name: nginx
     hostname: ghost-nginx
     ports:
-      - 443:443
+      - "80:80"
+      - "443:443"
     volumes:
       - ./nginx/configs/ghost.template:/etc/nginx/conf.d/ghost.template
       - ./data/nginx:/etc/nginx/conf.d
       - ./data/certbot/conf:/etc/letsencrypt
       - ./data/certbot/www:/var/www/certbot
-    links:
-      - ghost
     depends_on:
       - certbot
-      - mysql
+      - ghost
     restart: always
     environment:
       - APP_DOMAIN=${APP_DOMAIN}
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
-  
+
   certbot:
     image: certbot/certbot
     restart: unless-stopped
@@ -35,33 +34,35 @@ services:
     container_name: ghost
     hostname: ghost
     volumes:
+      - ./ghost/content:/var/lib/ghost/content:z
+      - ./ghost/volumes/config.development.json:/var/lib/ghost/config.development.json
       - ./ghost/volumes/config.production.json:/var/lib/ghost/config.production.json
-      - ./ghost/content:/var/lib/ghost/content
     expose:
       - "3306"
+    env_file:
+      - .env
     environment:
       NODE_ENV: ${ENVIRONMENT}
       database__client: mysql
       database__connection__host: db
       database__connection__user: ${MYSQL_DATABASE_USER}
       database__connection__password: ${MYSQL_PASSWORD}
-      database__connection__database: ${MYSQL_DATABASE_NAME}
+      database__connection__database: ${MYSQL_DATABASE}
       url: https://${APP_DOMAIN}
     restart: always
-    links:
-      - mysql
+    depends_on:
+      - db
 
-  mysql:
-    image: mysql:latest
-    container_name: mysql
+  db:
+    image: mysql:8.0
     volumes:
-      - ./dbdata:/var/lib/mysql:z # Persist storage
-    expose:
-      - "3306"
+      - ./dbdata:/var/lib/mysql
+    ports:
+      - 3306:3306
+    container_name: mysqldb
     environment:
-      # Beware of special characters in password that can be interpreted by shell
-      - MYSQL_ROOT_PASSWORD=${ROOT_PSD}
-      - MYSQL_DATABASE=${MYSQL_DATABASE_NAME}
-      - MYSQL_USER=${MYSQL_DATABASE_USER}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD} #please change this
+      MYSQL_ROOT_PASSWORD: ${ROOT_PSD}
+      MYSQL_USER: ${MYSQL_DATABASE_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
     restart: always

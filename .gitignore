@@ -6,7 +6,9 @@
 nginx/ssl/*.crt
 nginx/ssl/*.key
 
-/data/certbot
+data/
+logs/
+ghost/content
 
 #Config files
 *.lab.json

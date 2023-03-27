@@ -10,7 +10,10 @@ server {
   listen 443 ssl http2 default_server;
   listen [::]:443 http2 ssl;
   server_name ${APP_DOMAIN};
-  ssl on;
+
+  access_log /var/log/nginx/ghost.access.log;
+  error_log /var/log/nginx/ghost.error.log;
+
   ssl_certificate /etc/letsencrypt/live/${APP_DOMAIN}/fullchain.pem;
   ssl_certificate_key /etc/letsencrypt/live/${APP_DOMAIN}/privkey.pem;
   include /etc/letsencrypt/options-ssl-nginx.conf;
@@ -34,9 +37,8 @@ server {
     proxy_cache_valid 200 30m;
     proxy_cache_valid 404 1m;
     
-    client_max_body_size                  10m;
+    client_max_body_size                  20m;
     client_body_buffer_size               128k;
-
   
     proxy_pass http://ghost:2368;
   }
