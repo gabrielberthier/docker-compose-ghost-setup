@@ -7,11 +7,11 @@ fi
 
 # Checks for .env existence and export variables
 if [ -f .env ]; then
-  export $(echo $(cat .env | sed 's/#.*//g'| xargs) | envsubst)
+  export $(echo $(cat .env | sed 's/#.*//g' | xargs) | envsubst)
 fi
 
 # Remove trailing new line
-export APP_DOMAIN="$(echo "$GHOST_APP_DOMAIN"|tr -d '\n')"
+export APP_DOMAIN="$(echo "$GHOST_APP_DOMAIN" | tr -d '\n')"
 
 domains=("$APP_DOMAIN" "www.$APP_DOMAIN")
 rsa_key_size=4096
@@ -28,12 +28,11 @@ if [ -d "$data_path" ]; then
   fi
 fi
 
-
 if [ ! -e "$data_path/conf/options-ssl-nginx.conf" ] || [ ! -e "$data_path/conf/ssl-dhparams.pem" ]; then
   echo "### Downloading recommended TLS parameters ..."
   mkdir -p "$data_path/conf"
-  curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot-nginx/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf > "$data_path/conf/options-ssl-nginx.conf"
-  curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot/certbot/ssl-dhparams.pem > "$data_path/conf/ssl-dhparams.pem"
+  curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot-nginx/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf >"$data_path/conf/options-ssl-nginx.conf"
+  curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot/certbot/ssl-dhparams.pem >"$data_path/conf/ssl-dhparams.pem"
   echo
 fi
 
@@ -47,7 +46,6 @@ docker-compose run --rm --entrypoint "\
     -subj '/CN=localhost'" certbot
 echo
 
-
 echo "### Starting nginx ..."
 docker-compose up --force-recreate -d nginx
 echo
@@ -59,7 +57,6 @@ docker-compose run --rm --entrypoint "\
   rm -Rf /etc/letsencrypt/renewal/$domains.conf" certbot
 echo
 
-
 echo "### Requesting Let's Encrypt certificate for $domains ..."
 #Join $domains to -d args
 domain_args=""
@@ -69,8 +66,8 @@ done
 
 # Select appropriate email arg
 case "$email" in
-  "") email_arg="--register-unsafely-without-email" ;;
-  *) email_arg="--email $email" ;;
+"") email_arg="--register-unsafely-without-email" ;;
+*) email_arg="--email $email" ;;
 esac
 
 # Enable staging mode if needed
@@ -90,8 +87,8 @@ echo
 
 mkdir -p "./data/nginx"
 echo "### Creating default conf file"
-envsubst '$APP_DOMAIN' < ./nginx/configs/ghost.template > ./data/nginx/default.conf 
+envsubst '$APP_DOMAIN' <./nginx/configs/ghost.template >./data/nginx/default.conf
 
 echo "### Reloading nginx ..."
 
-docker-compose exec nginx nginx -s reload && nginx -g 'daemon off;' 
+docker-compose exec nginx nginx -s reload && nginx -g 'daemon off;'
