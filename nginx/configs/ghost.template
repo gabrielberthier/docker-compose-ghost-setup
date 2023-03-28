@@ -1,15 +1,16 @@
 server {
     listen 80;
+    listen [::]:80;
     server_name ${APP_DOMAIN} www.${APP_DOMAIN};
     
     client_max_body_size 20m;
-    
-    location / {
-        return 301 https://$server_name$request_uri;
-    }    
 
     location /.well-known/acme-challenge/ {
       root /var/www/certbot; allow all;
+    }
+    
+    location / {
+        return 301 https://$server_name$request_uri;
     }
 }
 
@@ -17,6 +18,8 @@ server {
   listen 443 ssl http2 default_server;
   listen [::]:443 ssl ipv6only=on;
   server_name ${APP_DOMAIN};
+
+  ssl_protocols TLSv1.2;
 
   access_log /var/log/nginx/ghost.access.log;
   error_log /var/log/nginx/ghost.error.log;
