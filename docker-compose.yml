@@ -32,7 +32,8 @@ services:
   ghost:
     image: ghost:latest
     container_name: ghost
-    hostname: ghost
+    depends_on:
+      - db
     volumes:
       - ./ghost/content:/var/lib/ghost/content:z
       - ./ghost/volumes/config.development.json:/var/lib/ghost/config.development.json
@@ -42,6 +43,8 @@ services:
       - "2368"
     env_file:
       - .env
+    ports:
+      - "2368:2368"
     environment:
       NODE_ENV: ${ENVIRONMENT}
       database__client: mysql
@@ -51,8 +54,6 @@ services:
       database__connection__database: ${MYSQL_DATABASE}
       url: https://${APP_DOMAIN}
     restart: always
-    depends_on:
-      - db
 
   db:
     image: mysql:8.0
