@@ -38,13 +38,13 @@ services:
       - ./ghost/content:/var/lib/ghost/content:z
       - ./ghost/volumes/config.development.json:/var/lib/ghost/config.development.json
       - ./ghost/volumes/config.production.json:/var/lib/ghost/config.production.json
+    ports:
+      - "2368:2368"
     expose:
       - "3306"
       - "2368"
     env_file:
       - .env
-    ports:
-      - "2368:2368"
     environment:
       NODE_ENV: ${ENVIRONMENT}
       database__client: mysql
