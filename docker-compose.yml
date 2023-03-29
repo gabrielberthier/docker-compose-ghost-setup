@@ -39,6 +39,7 @@ services:
       - ./ghost/volumes/config.production.json:/var/lib/ghost/config.production.json
     expose:
       - "3306"
+      - "2368"
     env_file:
       - .env
     environment:
