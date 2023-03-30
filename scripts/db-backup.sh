@@ -5,17 +5,26 @@ echo "#########################################################################"
 
 DAY=$(date +%A)
 FULLDATE=$(date -I)
+DATESTAMP=$(date +%Y-%m-%d_%Hh%Mm%Ss)
+BKP_PATH="./dbdata/backups/ghost"
+BKP_SNAPSHOTS="./dbdata/backups/snapshots"
+OUTPUT_PATH=/var/lib/mysql/backups/ghost
 
-echo "Creating Backup Folder..."
-mkdir -p /root/backup/ghost
+export $(grep -v '^#' .env | xargs)
 
-echo "Stopping Ghost Service..."
-docker stop ghost
+echo $APP_DOMAIN
+
+echo "Creating Backup Folder and Snapshots Folder..."
+mkdir -p $BKP_PATH
+mkdir -p $BKP_SNAPSHOTS
+
+echo "Creating backup with mysqldump"
+
+command='/usr/bin/mysqldump -u root --password=${ROOT_PSD} ghostdb > $BKP_PATH/backup-$DATESTAMP.sql'
+
+docker exec -t -i mysqldb sh -c '$command'
 
 echo "Backing up Ghost Data Folder..."
-tar -zcvf /root/backup/ghost/ghost-$FULLDATE.tar.gz -C /root/docker-compose-ghost-quickstart/ghost/dbdata
-
-echo "Starting Ghost Service..."
-docker start blog_ghost_1
+tar -zcvf $BKP_SNAPSHOTS/ghost-$FULLDATE.tar.gz $BKP_PATH
 
 echo "## END BACKUP GHOST BLOG - `date +%A` - `date +%Y-%m-%d_%Hh%Mm%Ss` ##########"
