@@ -20,6 +20,8 @@ services:
     environment:
       - APP_DOMAIN=${APP_DOMAIN}
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+    networks:
+      - nginx-net
 
   certbot:
     image: certbot/certbot:latest
@@ -28,7 +30,8 @@ services:
       - ./data/certbot/conf:/etc/letsencrypt
       - ./data/certbot/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-    network_mode: "host"
+    networks:
+      - outsideworld
 
   ghost:
     image: ghost:latest
@@ -54,6 +57,8 @@ services:
       database__connection__database: ${MYSQL_DATABASE}
       url: https://${APP_DOMAIN}
     restart: always
+    networks:
+      - nginx-net
 
   db:
     image: mysql:8.0
@@ -68,3 +73,12 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
     restart: always
+    networks:
+      - nginx-net
+
+networks:
+  nginx-net:
+    driver: bridge
+  outsideworld:
+    external: true
+    name: host
