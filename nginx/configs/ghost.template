@@ -1,6 +1,5 @@
 server {
     listen 80;
-    listen [::]:80;
     server_name ${APP_DOMAIN} www.${APP_DOMAIN};
     server_tokens off;
 
@@ -15,7 +14,6 @@ server {
 
 server {
     listen 443 ssl http2;
-    listen [::]:443 ssl ipv6only=on;
     server_name ${APP_DOMAIN} www.${APP_DOMAIN};
     server_tokens off;
 
@@ -27,14 +25,15 @@ server {
     # NGINX limits uploads to 1MB by default. The following line increases
     # the limit to 2MB, which is helpful when you want to add larger
     # images to your blog.
-    client_max_body_size 10M;
+    client_max_body_size 2M;
 
     location / {
+        # The following block forwards requests to port 2368 of our Ghost
+        # container, which will be named abridges_blog.
+        proxy_pass    http://ghost:2368;
         proxy_set_header    Host                $http_host;
         proxy_set_header    X-Real-IP           $remote_addr;
         proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
         proxy_set_header    X-Forwarded-Proto   $scheme;
-
-        proxy_pass          http://ghost:2368;
     }
 }
