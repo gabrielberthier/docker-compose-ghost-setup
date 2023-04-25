@@ -1,5 +1,6 @@
 server {
     listen 80;
+    listen [::]:80;
     server_name ${APP_DOMAIN} www.${APP_DOMAIN};
     server_tokens off;
 
