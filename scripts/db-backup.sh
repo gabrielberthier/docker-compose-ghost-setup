@@ -3,7 +3,6 @@ echo "#########################################################################"
 echo "## BACKUP GHOST BLOG - `date +%A` - `date +%Y-%m-%d_%Hh%Mm%Ss` ##########"
 echo "#########################################################################"
 
-DAY=$(date +%A)
 FULLDATE=$(date -I)
 DATESTAMP=$(date +%Y-%m-%d_%Hh%Mm%Ss)
 BKP_PATH="./dbdata/backups/ghost"
@@ -19,10 +18,9 @@ mkdir -p $BKP_PATH
 mkdir -p $BKP_SNAPSHOTS
 
 echo "Creating backup with mysqldump"
+command="/usr/bin/mysqldump -u root --password=${ROOT_PSD} ghostdb > ${OUTPUT_PATH}/backup-${DATESTAMP}.sql"
 
-command='/usr/bin/mysqldump -u root --password=${ROOT_PSD} ghostdb > $BKP_PATH/backup-$DATESTAMP.sql'
-
-docker exec -t -i mysqldb sh -c '$command'
+docker exec -t -i mysqldb sh -c "${command}"
 
 echo "Backing up Ghost Data Folder..."
 tar -zcvf $BKP_SNAPSHOTS/ghost-$FULLDATE.tar.gz $BKP_PATH
