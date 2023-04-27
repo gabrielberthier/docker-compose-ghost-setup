@@ -18,6 +18,7 @@ mkdir -p $BKP_PATH
 mkdir -p $BKP_SNAPSHOTS
 
 echo "Creating backup with mysqldump"
+
 command="/usr/bin/mysqldump -u root --password=${ROOT_PSD} ghostdb > ${OUTPUT_PATH}/backup-${DATESTAMP}.sql"
 
 docker exec -t -i mysqldb sh -c "${command}"
