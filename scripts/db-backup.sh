@@ -3,6 +3,9 @@ echo "#########################################################################"
 echo "## BACKUP GHOST BLOG - `date +%A` - `date +%Y-%m-%d_%Hh%Mm%Ss` ##########"
 echo "#########################################################################"
 
+cd "$(dirname "$0")"
+cd ..
+
 FULLDATE=$(date -I)
 DATESTAMP=$(date +%Y-%m-%d_%Hh%Mm%Ss)
 BKP_PATH="./dbdata/backups/ghost"

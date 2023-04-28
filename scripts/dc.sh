@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+cd "$(dirname "$0")"
+cd ..
+
+
 if [ "$1" == "start" ]; then
     docker-compose start
 fi
